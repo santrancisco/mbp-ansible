@@ -109,23 +109,4 @@
       shell: brew cask info {{ item }} > brew_info/{{ item }}
       with_items: "{{ cask_result.results | selectattr('changed') | map(attribute='item') | map(attribute='name') | list }}"
 
-#    - name: post process brew formulae
-#      script: brew_post_process.sh
 
-#    - name: clone dotfiles
-#      git:
-#        repo: https://github.com/shuuji3/dotfiles.git
-#        dest: ~/src/dotfiles
-#        update: no
-#    - name: sync dotfiles
-#      synchronize: 
-#        src: ~/src/dotfiles/
-#        dest: ~/
-#      
-#    - name: clone mathiasbynens-dotfiles for .macos
-#      git:
-#        repo: https://github.com/shuuji3/mathiasbynens-dotfiles.git
-#        dest: ~/src/mathiasbynens-dotfiles
-#        update: no
-#    - name: apply MacOS setting script
-#      script: ~/src/mathiasbynens-dotfiles/macos.sh 
