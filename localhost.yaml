@@ -1,0 +1,131 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    homebrew_taps:
+      - homebrew/dupes
+      - homebrew/science
+      - caskroom/cask
+      - homebrew/apache
+      - railwaycat/emacsmacport
+    homebrew_formulae:
+   # programming
+      - name: make
+      - name: gcc
+      - name: gdb
+      - name: go
+   # file management
+      - name: git
+   # system tools
+      - name: fish
+      - name: direnv
+      - name: fzf
+      - name: curl
+      - name: grep
+      - name: nkf
+      - name: gzip
+      - name: less
+      - name: htop
+      - name: p7zip
+      - name: unrar
+      - name: wget
+      - name: lv
+      - name: tree
+   # network
+      - name: openssh
+      - name: ab
+      - name: mtr
+      - name: nmap
+      - name: rsync
+      - name: whois
+      - name: gnupg
+      - name: openssl
+    homebrew_cask_formulae:
+   # development
+      - name: atom
+      - name: virtualbox
+      - name: vagrant
+      - name: vmware-fusion 
+      - name: pinegrow-web-designer
+   # web
+      - name: google-chrome
+   # video
+      - name: vlc
+      # sound & music
+      #- name: audacity
+      #- name: audacity-lame-library
+      #- name: xld
+      #- name: soundflower
+      #- name: linein
+      #- name: radiant-player
+      #- name: amazon-music
+   # system tools
+      - name: iterm2
+      #- name: karabiner-elements
+      #- name: appcleaner
+      #- name: disk-inventory-x
+      #- name: the-unarchiver
+      #- name: xquartz
+  # book & document
+      #- name: libreoffice
+  # misc
+      - name: slack
+      - name: keepassx
+  tasks:
+    - name: add homebrew taps
+      homebrew_tap: tap={{ item }} state=present
+      with_items: "{{ homebrew_taps }}"
+    - name: update homebrew
+      homebrew: update_homebrew=yes
+
+  # brew
+    - name: install homebrew formulae
+      homebrew: >-
+        name={{ item.name }}
+        state={{ item.state | default('latest') }}
+        options={{ item.options | default() }}
+      with_items: "{{ homebrew_formulae }}"
+      register: brew_result
+
+    - name: make info directory for brew 
+      file: path=brew_info state=directory
+    - name: save brew info
+      shell: brew info {{ item }} > brew_info/{{ item }}
+      with_items: "{{ brew_result.results | selectattr('changed') | map(attribute='item') | map(attribute='name') | list }}"
+
+  # cask
+    - name: install homebrew casks formulae
+      homebrew_cask: >-
+        name={{ item.name }}
+        state={{ item.state | default('installed') }}
+        options={{ item.options | default() }}
+      with_items: "{{ homebrew_cask_formulae }}"
+      register: cask_result
+
+    - name: make info directory for cask
+      file: path=brew_info state=directory
+    - name: save cask info
+      shell: brew cask info {{ item }} > brew_info/{{ item }}
+      with_items: "{{ cask_result.results | selectattr('changed') | map(attribute='item') | map(attribute='name') | list }}"
+
+#    - name: post process brew formulae
+#      script: brew_post_process.sh
+
+#    - name: clone dotfiles
+#      git:
+#        repo: https://github.com/shuuji3/dotfiles.git
+#        dest: ~/src/dotfiles
+#        update: no
+#    - name: sync dotfiles
+#      synchronize: 
+#        src: ~/src/dotfiles/
+#        dest: ~/
+#      
+#    - name: clone mathiasbynens-dotfiles for .macos
+#      git:
+#        repo: https://github.com/shuuji3/mathiasbynens-dotfiles.git
+#        dest: ~/src/mathiasbynens-dotfiles
+#        update: no
+#    - name: apply MacOS setting script
+#      script: ~/src/mathiasbynens-dotfiles/macos.sh 
